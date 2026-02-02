@@ -9,13 +9,13 @@ services:
       - traefik-public
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.projects-dashboard.rule=Host(\`dashboard.51.77.223.61.nip.io\`)"
+      - "traefik.http.routers.projects-dashboard.rule=Host(`dashboard.51.77.223.61.nip.io`)"
       - "traefik.http.routers.projects-dashboard.entrypoints=websecure"
       - "traefik.http.routers.projects-dashboard.tls=true"
       - "traefik.http.routers.projects-dashboard.tls.certresolver=letsencrypt"
       - "traefik.http.services.projects-dashboard.loadbalancer.server.port=3000"
-      - "traefik.http.routers.projects-dashboard.middlewares=dashboard-auth"
-      - "traefik.http.middlewares.dashboard-auth.basicauth.users=\${DASHBOARD_AUTH}"
+      - "traefik.http.routers.projects-dashboard.middlewares=projects-auth"
+      - "traefik.http.middlewares.projects-auth.basicauth.users=${DASHBOARD_AUTH}"
 networks:
   traefik-public:
     external: true
