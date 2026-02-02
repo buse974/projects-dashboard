@@ -1,40 +1,344 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Projects Dashboard</title>
-    <link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
-    <header>
-        <h1>Projects Dashboard</h1>
-        <button id="refresh-btn">Rafraichir</button>
-    </header>
-    <main>
-        <section id="stats">
-            <div class="stat-card">
-                <span class="stat-value" id="total-projects">0</span>
-                <span class="stat-label">Projets</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-value" id="active-workflows">0</span>
-                <span class="stat-label">Workflows actifs</span>
-            </div>
-            <div class="stat-card healthy">
-                <span class="stat-value" id="healthy-services">0</span>
-                <span class="stat-label">Services OK</span>
-            </div>
-            <div class="stat-card error">
-                <span class="stat-value" id="error-services">0</span>
-                <span class="stat-label">Services KO</span>
-            </div>
-        </section>
-        <section id="projects-container">
-            <h2>Projets</h2>
-            <div id="projects-list"></div>
-        </section>
-    </main>
-    <script src="js/app.js"></script>
-</body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Projects Dashboard</title>
+        <link rel="stylesheet" href="css/styles.css" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+    <body>
+        <div class="app">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo">
+                        <span class="logo-icon">
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                                <path d="M2 17l10 5 10-5" />
+                                <path d="M2 12l10 5 10-5" />
+                            </svg>
+                        </span>
+                        <span class="logo-text">Projects</span>
+                    </div>
+                </div>
+
+                <div class="search-box">
+                    <svg
+                        class="search-icon"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Rechercher un projet..."
+                    />
+                </div>
+
+                <div class="stats-mini">
+                    <div class="stat-mini">
+                        <span class="stat-mini-value" id="stat-total">0</span>
+                        <span class="stat-mini-label">Projets</span>
+                    </div>
+                    <div class="stat-mini stat-success">
+                        <span class="stat-mini-value" id="stat-healthy">0</span>
+                        <span class="stat-mini-label">Online</span>
+                    </div>
+                    <div class="stat-mini stat-error">
+                        <span class="stat-mini-value" id="stat-errors">0</span>
+                        <span class="stat-mini-label">Offline</span>
+                    </div>
+                </div>
+
+                <nav class="projects-nav">
+                    <div class="nav-header">
+                        <span>Mes Projets</span>
+                        <button
+                            class="refresh-btn"
+                            id="refresh-btn"
+                            title="Rafraichir"
+                        >
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path
+                                    d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"
+                                />
+                                <path d="M21 3v5h-5" />
+                            </svg>
+                        </button>
+                    </div>
+                    <ul class="projects-list" id="projects-list">
+                        <!-- Projects will be injected here -->
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state">
+                    <div class="empty-icon">
+                        <svg
+                            width="80"
+                            height="80"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1"
+                        >
+                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                            <path d="M2 17l10 5 10-5" />
+                            <path d="M2 12l10 5 10-5" />
+                        </svg>
+                    </div>
+                    <h2>Sélectionnez un projet</h2>
+                    <p>
+                        Cliquez sur un projet dans la liste pour voir ses
+                        détails
+                    </p>
+                </div>
+
+                <!-- Project Detail View -->
+                <div
+                    class="project-detail"
+                    id="project-detail"
+                    style="display: none"
+                >
+                    <header class="detail-header">
+                        <div class="detail-title-section">
+                            <h1 id="detail-name">Nom du projet</h1>
+                            <span class="detail-status" id="detail-status">
+                                <span class="status-dot"></span>
+                                <span class="status-text">Online</span>
+                            </span>
+                        </div>
+                        <div class="detail-actions">
+                            <button
+                                class="action-btn"
+                                id="btn-github"
+                                title="GitHub"
+                            >
+                                <svg
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                                    />
+                                </svg>
+                            </button>
+                            <button
+                                class="action-btn"
+                                id="btn-url"
+                                title="Ouvrir"
+                            >
+                                <svg
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <path
+                                        d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+                                    />
+                                    <polyline points="15 3 21 3 21 9" />
+                                    <line x1="10" y1="14" x2="21" y2="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </header>
+
+                    <div class="detail-body">
+                        <!-- Info Card -->
+                        <section class="detail-card info-card">
+                            <h3>
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 16v-4" />
+                                    <path d="M12 8h.01" />
+                                </svg>
+                                Informations
+                            </h3>
+                            <p class="project-pitch" id="detail-pitch">
+                                Description du projet
+                            </p>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">Créé le</span>
+                                    <span class="info-value" id="detail-created"
+                                        >-</span
+                                    >
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label"
+                                        >Dernière mise à jour</span
+                                    >
+                                    <span class="info-value" id="detail-updated"
+                                        >-</span
+                                    >
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Version</span>
+                                    <span class="info-value" id="detail-version"
+                                        >-</span
+                                    >
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Type</span>
+                                    <span class="info-value" id="detail-type"
+                                        >-</span
+                                    >
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Tech Stack -->
+                        <section class="detail-card tech-card">
+                            <h3>
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <polyline points="16 18 22 12 16 6" />
+                                    <polyline points="8 6 2 12 8 18" />
+                                </svg>
+                                Stack Technique
+                            </h3>
+                            <div class="tech-tags" id="detail-stack">
+                                <!-- Tags will be injected here -->
+                            </div>
+                        </section>
+
+                        <!-- Repositories -->
+                        <section class="detail-card repos-card">
+                            <h3>
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <path
+                                        d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                                    />
+                                </svg>
+                                Services & Repos
+                            </h3>
+                            <div class="repos-list-detail" id="detail-repos">
+                                <!-- Repos will be injected here -->
+                            </div>
+                        </section>
+
+                        <!-- Workflows -->
+                        <section
+                            class="detail-card workflows-card"
+                            id="workflows-section"
+                            style="display: none"
+                        >
+                            <h3>
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <circle cx="12" cy="12" r="3" />
+                                    <path d="M12 1v6" />
+                                    <path d="M12 17v6" />
+                                    <path d="m5.6 5.6 4.2 4.2" />
+                                    <path d="m14.2 14.2 4.2 4.2" />
+                                    <path d="M1 12h6" />
+                                    <path d="M17 12h6" />
+                                    <path d="m5.6 18.4 4.2-4.2" />
+                                    <path d="m14.2 9.8 4.2-4.2" />
+                                </svg>
+                                Workflows Actifs
+                            </h3>
+                            <div class="workflows-list" id="detail-workflows">
+                                <!-- Workflows will be injected here -->
+                            </div>
+                        </section>
+
+                        <!-- Environment Variables -->
+                        <section
+                            class="detail-card env-card"
+                            id="env-section"
+                            style="display: none"
+                        >
+                            <h3>
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <rect
+                                        x="3"
+                                        y="11"
+                                        width="18"
+                                        height="11"
+                                        rx="2"
+                                        ry="2"
+                                    />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                                Variables d'environnement
+                            </h3>
+                            <div class="env-list" id="detail-env">
+                                <!-- Env vars will be injected here -->
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <script src="js/app.js"></script>
+    </body>
 </html>
