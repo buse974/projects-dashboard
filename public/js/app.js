@@ -67,6 +67,27 @@ class Dashboard {
         window.open(this.selectedProject.repos[0].url, "_blank");
       }
     });
+
+    // Workflow tabs
+    document.querySelectorAll(".workflow-tab").forEach((tab) => {
+      tab.addEventListener("click", (e) => {
+        const tabName = e.currentTarget.dataset.tab;
+        this.switchWorkflowTab(tabName);
+      });
+    });
+  }
+
+  switchWorkflowTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll(".workflow-tab").forEach((tab) => {
+      tab.classList.toggle("active", tab.dataset.tab === tabName);
+    });
+
+    // Show/hide lists
+    document.getElementById("detail-workflows-active").style.display =
+      tabName === "active" ? "flex" : "none";
+    document.getElementById("detail-workflows-completed").style.display =
+      tabName === "completed" ? "flex" : "none";
   }
 
   async loadProjects() {
@@ -117,7 +138,13 @@ class Dashboard {
             url: "https://portfolio.example.com",
           },
         ],
-        workflows: { active: [] },
+        workflows: {
+          active: [],
+          completed: [
+            { title: "Setup initial Next.js", completed_at: "2024-01-20" },
+            { title: "Intégration Framer Motion", completed_at: "2024-01-28" },
+          ],
+        },
         env: ["NEXT_PUBLIC_API_URL", "ANALYTICS_ID"],
       },
       {
@@ -159,6 +186,11 @@ class Dashboard {
             },
             { title: "Multi-tenancy", current_phase: "planning" },
           ],
+          completed: [
+            { title: "Setup authentification JWT", completed_at: "2024-02-15" },
+            { title: "Dashboard admin de base", completed_at: "2024-02-20" },
+            { title: "API REST CRUD users", completed_at: "2024-02-22" },
+          ],
         },
         env: ["DATABASE_URL", "STRIPE_SECRET_KEY", "JWT_SECRET", "REDIS_URL"],
       },
@@ -191,6 +223,11 @@ class Dashboard {
           active: [
             { title: "Support multi-langues", current_phase: "testing" },
           ],
+          completed: [
+            { title: "Intégration GPT-4 API", completed_at: "2024-01-25" },
+            { title: "Flow builder drag-and-drop", completed_at: "2024-02-10" },
+            { title: "Système de templates", completed_at: "2024-02-18" },
+          ],
         },
         env: ["OPENAI_API_KEY", "REDIS_URL", "DATABASE_URL"],
       },
@@ -219,7 +256,14 @@ class Dashboard {
             url: "https://grafana.example.com",
           },
         ],
-        workflows: { active: [] },
+        workflows: {
+          active: [],
+          completed: [
+            { title: "Migration vers Go 1.21", completed_at: "2024-01-10" },
+            { title: "Alerting Slack/Discord", completed_at: "2024-02-05" },
+            { title: "Dashboard Grafana custom", completed_at: "2024-02-15" },
+          ],
+        },
         env: ["INFLUXDB_URL", "PROMETHEUS_URL", "SLACK_WEBHOOK"],
       },
       {
@@ -247,7 +291,13 @@ class Dashboard {
             url: "https://api.fittrack.example.com",
           },
         ],
-        workflows: { active: [] },
+        workflows: {
+          active: [],
+          completed: [
+            { title: "Setup React Native", completed_at: "2024-01-08" },
+            { title: "GPS Tracking module", completed_at: "2024-01-25" },
+          ],
+        },
         env: ["MONGODB_URI", "APPLE_HEALTH_KEY", "GOOGLE_FIT_KEY"],
       },
       {
@@ -272,6 +322,12 @@ class Dashboard {
         workflows: {
           active: [
             { title: "Migration vers Shopify 2.0", current_phase: "review" },
+          ],
+          completed: [
+            { title: "Setup Next.js + Shopify", completed_at: "2023-12-20" },
+            { title: "GraphQL Storefront API", completed_at: "2024-01-05" },
+            { title: "Checkout custom", completed_at: "2024-01-20" },
+            { title: "Optimisation SEO", completed_at: "2024-02-10" },
           ],
         },
         env: [
@@ -411,25 +467,69 @@ class Dashboard {
         .join("") || '<p style="color: var(--text-muted)">Aucun repository</p>';
 
     // Workflows
-    const workflows = p.workflows?.active || [];
+    const activeWorkflows = p.workflows?.active || [];
+    const completedWorkflows = p.workflows?.completed || [];
     const workflowsSection = document.getElementById("workflows-section");
-    const workflowsContainer = document.getElementById("detail-workflows");
+    const activeContainer = document.getElementById("detail-workflows-active");
+    const completedContainer = document.getElementById(
+      "detail-workflows-completed",
+    );
 
-    if (workflows.length > 0) {
+    // Update tab counts
+    document.getElementById("active-count").textContent =
+      activeWorkflows.length;
+    document.getElementById("completed-count").textContent =
+      completedWorkflows.length;
+
+    if (activeWorkflows.length > 0 || completedWorkflows.length > 0) {
       workflowsSection.style.display = "block";
-      workflowsContainer.innerHTML = workflows
-        .map(
-          (wf) => `
+
+      // Render active workflows
+      if (activeWorkflows.length > 0) {
+        activeContainer.innerHTML = activeWorkflows
+          .map(
+            (wf) => `
                 <div class="workflow-item-detail">
                     <div class="workflow-info">
                         <h4>${wf.title}</h4>
-                        <span>Workflow actif</span>
+                        <span>En cours</span>
                     </div>
-                    <span class="workflow-phase-badge">${wf.current_phase}</span>
+                    <div class="workflow-meta">
+                        <span class="workflow-phase-badge">${wf.current_phase}</span>
+                    </div>
                 </div>
             `,
-        )
-        .join("");
+          )
+          .join("");
+      } else {
+        activeContainer.innerHTML =
+          '<p class="workflows-list empty">Aucun workflow actif</p>';
+      }
+
+      // Render completed workflows
+      if (completedWorkflows.length > 0) {
+        completedContainer.innerHTML = completedWorkflows
+          .map(
+            (wf) => `
+                <div class="workflow-item-detail completed">
+                    <div class="workflow-info">
+                        <h4>${wf.title}</h4>
+                        <span>Terminé${wf.completed_at ? ` le ${this.formatDate(wf.completed_at)}` : ""}</span>
+                    </div>
+                    <div class="workflow-meta">
+                        <span class="workflow-phase-badge completed">Terminé</span>
+                    </div>
+                </div>
+            `,
+          )
+          .join("");
+      } else {
+        completedContainer.innerHTML =
+          '<p class="workflows-list empty">Aucun workflow terminé</p>';
+      }
+
+      // Reset to active tab
+      this.switchWorkflowTab("active");
     } else {
       workflowsSection.style.display = "none";
     }
