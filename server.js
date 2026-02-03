@@ -23,43 +23,45 @@ app.get("/api/projects", async (req, res) => {
 
     for (const dir of dirs) {
       const projectPath = path.join(PROJECTS_DIR, dir, ".project");
-      const dashboardPath = path.join(projectPath, "dashboard.json");
       const metadataPath = path.join(projectPath, "metadata.json");
 
-      // Priorité à dashboard.json (nouveau format)
-      if (fs.existsSync(dashboardPath)) {
-        try {
-          const dashboard = JSON.parse(fs.readFileSync(dashboardPath, "utf8"));
-
-          // Charger les workflows depuis .workflows/
-          const workflows = loadWorkflows(PROJECTS_DIR, dir);
-          dashboard.workflows = workflows;
-
-          projects.push(dashboard);
-        } catch (e) {
-          console.error("Error reading dashboard.json for", dir, e);
-        }
-      }
-      // Fallback sur metadata.json (ancien format)
-      else if (fs.existsSync(metadataPath)) {
+      if (fs.existsSync(metadataPath)) {
         try {
           const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
           const workflows = loadWorkflows(PROJECTS_DIR, dir);
 
-          // Convertir ancien format vers nouveau
-          projects.push({
-            id: dir,
-            name: metadata.name || dir,
-            pitch: metadata.description || "",
-            type: "fullstack",
-            created: metadata.created_at || null,
-            updated: metadata.created_at || null,
-            version: "1.0.0",
-            stack: [],
-            repos: buildReposFromMetadata(metadata, dir),
-            workflows: workflows,
-            env: [],
-          });
+          // Nouveau format (avec repos array)
+          if (metadata.repos && Array.isArray(metadata.repos)) {
+            projects.push({
+              id: dir,
+              name: metadata.name || dir,
+              pitch: metadata.pitch || metadata.description || "",
+              type: metadata.type || "fullstack",
+              created: metadata.created_at || null,
+              updated: metadata.updated_at || metadata.created_at || null,
+              version: metadata.version || "1.0.0",
+              stack: metadata.stack || [],
+              repos: metadata.repos,
+              workflows: workflows,
+              env: metadata.env || [],
+            });
+          }
+          // Ancien format (avec domains object) - conversion automatique
+          else {
+            projects.push({
+              id: dir,
+              name: metadata.name || dir,
+              pitch: metadata.description || "",
+              type: "fullstack",
+              created: metadata.created_at || null,
+              updated: metadata.created_at || null,
+              version: "1.0.0",
+              stack: [],
+              repos: buildReposFromDomains(metadata, dir),
+              workflows: workflows,
+              env: [],
+            });
+          }
         } catch (e) {
           console.error("Error reading metadata.json for", dir, e);
         }
@@ -130,8 +132,8 @@ function loadWorkflows(projectsDir, projectName) {
   return result;
 }
 
-// Construire la liste des repos depuis l'ancien format metadata
-function buildReposFromMetadata(metadata, projectName) {
+// Construire la liste des repos depuis l'ancien format (domains object)
+function buildReposFromDomains(metadata, projectName) {
   const repos = [];
   const domains = metadata.domains || {};
   const githubOrg = metadata.github_org || "buse974";
