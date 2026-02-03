@@ -487,10 +487,12 @@ class Dashboard {
         }
 
         try {
+          // Use custom healthUrl if provided, otherwise fallback to default
           const healthUrl =
-            repo.type === "landing"
+            repo.healthUrl ||
+            (repo.type === "landing"
               ? `${repo.url}/health.json`
-              : `${repo.url}/health`;
+              : `${repo.url}/health`);
 
           const response = await fetch(healthUrl, {
             mode: "cors",
