@@ -685,13 +685,14 @@ body {
 
 .repo-item-detail:hover {
     border-color: var(--border-color-light);
-    transform: translateX(4px);
 }
 
 .repo-info {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
 }
 
 .repo-icon {
@@ -705,16 +706,52 @@ body {
     color: var(--accent-primary);
 }
 
+.repo-details {
+    min-width: 0;
+}
+
 .repo-details h4 {
     font-size: 0.9375rem;
     font-weight: 500;
     color: var(--text-primary);
     margin-bottom: 0.125rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .repo-details span {
     font-size: 0.75rem;
     color: var(--text-muted);
+}
+
+/* Repo Actions */
+.repo-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.repo-action-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: var(--transition-fast);
+}
+
+.repo-action-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    transform: translateY(-2px);
 }
 
 .repo-status-badge {
