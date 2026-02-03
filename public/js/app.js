@@ -337,20 +337,6 @@ class Dashboard {
     } else {
       envSection.style.display = "none";
     }
-
-    // Update button states
-    document.getElementById("btn-github").style.opacity = p.github
-      ? "1"
-      : "0.3";
-    document.getElementById("btn-github").style.pointerEvents = p.github
-      ? "auto"
-      : "none";
-
-    const hasUrl = p.repos?.[0]?.url;
-    document.getElementById("btn-url").style.opacity = hasUrl ? "1" : "0.3";
-    document.getElementById("btn-url").style.pointerEvents = hasUrl
-      ? "auto"
-      : "none";
   }
 
   async checkAllHealth() {
