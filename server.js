@@ -1,6 +1,7 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const LogWatcher = require("./lib/log-watcher");
 
 const app = express();
 const PORT = 3000;
@@ -10,6 +11,11 @@ const PORT = 3000;
 const PROJECTS_DIR = "/data/projects";
 
 app.use(express.static("public"));
+app.use(express.json());
+
+// Start log watcher
+const logWatcher = new LogWatcher(PROJECTS_DIR);
+logWatcher.start();
 
 app.get("/api/projects", async (req, res) => {
   try {
@@ -44,6 +50,7 @@ app.get("/api/projects", async (req, res) => {
               repos: metadata.repos,
               workflows: workflows,
               env: metadata.env || [],
+              errorCount: logWatcher.getErrorCount(dir),
             });
           }
           // Ancien format (avec domains object) - conversion automatique
@@ -60,6 +67,7 @@ app.get("/api/projects", async (req, res) => {
               repos: buildReposFromDomains(metadata, dir),
               workflows: workflows,
               env: [],
+              errorCount: logWatcher.getErrorCount(dir),
             });
           }
         } catch (e) {
@@ -73,6 +81,85 @@ app.get("/api/projects", async (req, res) => {
     console.error(error);
     res.status(500).json({ error: "Internal error" });
   }
+});
+
+// --- Docker Logs Endpoints ---
+
+// List containers for a project
+app.get("/api/projects/:id/containers", async (req, res) => {
+  try {
+    const containers = await logWatcher.dockerLogs.getContainersByProject(req.params.id);
+    res.json(containers);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// SSE stream logs for a specific container
+app.get("/api/projects/:id/containers/:name/logs", (req, res) => {
+  const containerName = req.params.name;
+  const projectId = req.params.id;
+
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+
+  res.write("data: {\"type\":\"connected\"}\n\n");
+
+  const onLog = (data) => {
+    if (data.container === containerName) {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    }
+  };
+
+  const onError = (data) => {
+    if (data.project === projectId) {
+      res.write(`data: ${JSON.stringify({ ...data, type: "error_detected" })}\n\n`);
+    }
+  };
+
+  logWatcher.on("log", onLog);
+  logWatcher.on("error", onError);
+
+  // If not already watching this container, start streaming
+  if (!logWatcher.streams.has(containerName)) {
+    logWatcher.dockerLogs.streamLogs(containerName, (line, isStderr) => {
+      logWatcher.emit("log", {
+        container: containerName,
+        project: projectId,
+        line,
+        isStderr,
+        timestamp: Date.now(),
+      });
+    }, { tail: 100 });
+  }
+
+  req.on("close", () => {
+    logWatcher.removeListener("log", onLog);
+    logWatcher.removeListener("error", onError);
+  });
+});
+
+// Get recent errors for a project
+app.get("/api/projects/:id/errors", (req, res) => {
+  const errors = logWatcher.getRecentErrors();
+  const count = logWatcher.getErrorCount(req.params.id);
+  res.json({ count, errors });
+});
+
+// Dismiss an error
+app.post("/api/projects/:id/errors/:hash/dismiss", (req, res) => {
+  logWatcher.dismissError(req.params.hash);
+  logWatcher.workflowCreator.dismissError(req.params.id, req.params.hash);
+  res.json({ ok: true });
+});
+
+// Docker status
+app.get("/api/docker/status", (req, res) => {
+  res.json({ available: logWatcher.isAvailable() });
 });
 
 // Charger les workflows actifs et complétés
@@ -97,6 +184,8 @@ function loadWorkflows(projectsDir, projectName) {
             result.active.push({
               title: wfMeta.title || wfDir,
               current_phase: wfMeta.current_phase || "unknown",
+              status: wfMeta.status || "in_progress",
+              source: wfMeta.source || null,
             });
           } catch (e) {}
         }

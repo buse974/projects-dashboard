@@ -301,6 +301,92 @@
                             </div>
                         </section>
 
+                        <!-- Docker Logs -->
+                        <section
+                            class="detail-card logs-card"
+                            id="logs-section"
+                            style="display: none"
+                        >
+                            <div class="logs-header">
+                                <h3>
+                                    <svg
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    >
+                                        <rect x="2" y="3" width="20" height="18" rx="2" />
+                                        <path d="m8 10 3 3-3 3" />
+                                        <path d="M14 16h4" />
+                                    </svg>
+                                    Docker Logs
+                                    <span
+                                        class="error-badge"
+                                        id="logs-error-badge"
+                                        style="display: none"
+                                        >0</span
+                                    >
+                                </h3>
+                                <div class="logs-controls">
+                                    <select
+                                        id="container-select"
+                                        class="container-select"
+                                    >
+                                        <option value="">
+                                            Sélectionner un container...
+                                        </option>
+                                    </select>
+                                    <button
+                                        class="logs-btn"
+                                        id="logs-toggle-btn"
+                                        title="Start/Stop stream"
+                                        disabled
+                                    >
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                        >
+                                            <polygon
+                                                points="5 3 19 12 5 21 5 3"
+                                            />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        class="logs-btn"
+                                        id="logs-clear-btn"
+                                        title="Clear logs"
+                                    >
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                        >
+                                            <path d="M3 6h18" />
+                                            <path
+                                                d="M8 6V4h8v2"
+                                            />
+                                            <path
+                                                d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="logs-terminal" id="logs-terminal">
+                                <div class="logs-placeholder">
+                                    Sélectionnez un container pour voir les
+                                    logs...
+                                </div>
+                            </div>
+                        </section>
+
                         <!-- Environment Variables -->
                         <section
                             class="detail-card env-card"

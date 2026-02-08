@@ -1,19 +1,20 @@
 /**
  * Modern Projects Dashboard
- * Interactive project list with detailed view
+ * Interactive project list with detailed view + Docker Logs
  */
 
 const API_BASE = "/api";
+const MAX_LOG_LINES = 1000;
 
 // Project type icons
 const TYPE_ICONS = {
-  web: "🌐",
-  api: "⚡",
-  mobile: "📱",
-  landing: "🚀",
-  backend: "🔧",
-  fullstack: "💻",
-  default: "📦",
+  web: "\u{1F310}",
+  api: "\u26A1",
+  mobile: "\u{1F4F1}",
+  landing: "\u{1F680}",
+  backend: "\u{1F527}",
+  fullstack: "\u{1F4BB}",
+  default: "\u{1F4E6}",
 };
 
 // Stack colors for tags
@@ -35,11 +36,16 @@ class Dashboard {
     this.projects = [];
     this.selectedProject = null;
     this.healthStatus = new Map();
+    this.dockerAvailable = false;
+    this.logEventSource = null;
+    this.logStreaming = false;
+    this.logLineCount = 0;
     this.init();
   }
 
   async init() {
     this.bindEvents();
+    await this.checkDockerStatus();
     await this.loadProjects();
   }
 
@@ -61,6 +67,40 @@ class Dashboard {
         this.switchWorkflowTab(tabName);
       });
     });
+
+    // Docker logs controls
+    document
+      .getElementById("container-select")
+      .addEventListener("change", (e) => {
+        this.stopLogStream();
+        if (e.target.value) {
+          document.getElementById("logs-toggle-btn").disabled = false;
+        } else {
+          document.getElementById("logs-toggle-btn").disabled = true;
+        }
+      });
+
+    document.getElementById("logs-toggle-btn").addEventListener("click", () => {
+      if (this.logStreaming) {
+        this.stopLogStream();
+      } else {
+        this.startLogStream();
+      }
+    });
+
+    document.getElementById("logs-clear-btn").addEventListener("click", () => {
+      this.clearLogs();
+    });
+  }
+
+  async checkDockerStatus() {
+    try {
+      const res = await fetch(`${API_BASE}/docker/status`);
+      const data = await res.json();
+      this.dockerAvailable = data.available;
+    } catch (e) {
+      this.dockerAvailable = false;
+    }
   }
 
   switchWorkflowTab(tabName) {
@@ -102,18 +142,22 @@ class Dashboard {
     if (this.projects.length === 0) {
       container.innerHTML = `
                 <li class="no-projects">
-                    <p>Aucun projet trouvé</p>
+                    <p>Aucun projet trouv\u00E9</p>
                 </li>
             `;
       return;
     }
 
     container.innerHTML = this.projects
-      .map((project, index) => {
+      .map((project) => {
         const icon = TYPE_ICONS[project.type] || TYPE_ICONS.default;
         const stackPreview =
-          project.stack?.slice(0, 2).join(" • ") || project.type;
+          project.stack?.slice(0, 2).join(" \u2022 ") || project.type;
         const isActive = this.selectedProject?.id === project.id;
+        const errorBadge =
+          project.errorCount > 0
+            ? `<span class="project-error-count">${project.errorCount}</span>`
+            : "";
 
         return `
                 <li class="project-item ${isActive ? "active" : ""}" data-id="${project.id}">
@@ -123,6 +167,7 @@ class Dashboard {
                             <div class="project-info-name">${project.name}</div>
                             <div class="project-info-stack">${stackPreview}</div>
                         </div>
+                        ${errorBadge}
                         <div class="project-status-indicator checking" data-project-status="${project.id}"></div>
                     </a>
                 </li>
@@ -137,6 +182,9 @@ class Dashboard {
   }
 
   selectProject(projectId) {
+    // Stop any active log stream when switching projects
+    this.stopLogStream();
+
     this.selectedProject = this.projects.find((p) => p.id === projectId);
 
     if (!this.selectedProject) return;
@@ -151,6 +199,7 @@ class Dashboard {
     document.getElementById("project-detail").style.display = "block";
 
     this.renderProjectDetail();
+    this.loadContainers(projectId);
   }
 
   renderProjectDetail() {
@@ -247,7 +296,8 @@ class Dashboard {
                 </div>
             `;
         })
-        .join("") || '<p style="color: var(--text-muted)">Aucun repository</p>';
+        .join("") ||
+      '<p style="color: var(--text-muted)">Aucun repository</p>';
 
     // Workflows
     const activeWorkflows = p.workflows?.active || [];
@@ -270,19 +320,22 @@ class Dashboard {
       // Render active workflows
       if (activeWorkflows.length > 0) {
         activeContainer.innerHTML = activeWorkflows
-          .map(
-            (wf) => `
-                <div class="workflow-item-detail">
+          .map((wf) => {
+            const isDetected = wf.source === "log-watcher";
+            const statusClass =
+              wf.status === "detected" ? "detected" : "";
+            return `
+                <div class="workflow-item-detail ${statusClass}">
                     <div class="workflow-info">
-                        <h4>${wf.title}</h4>
-                        <span>En cours</span>
+                        <h4>${isDetected ? "\u{1F6A8} " : ""}${wf.title}</h4>
+                        <span>${wf.status === "detected" ? "D\u00E9tect\u00E9 automatiquement" : "En cours"}</span>
                     </div>
                     <div class="workflow-meta">
-                        <span class="workflow-phase-badge">${wf.current_phase}</span>
+                        <span class="workflow-phase-badge ${statusClass}">${wf.status === "detected" ? "detected" : wf.current_phase}</span>
                     </div>
                 </div>
-            `,
-          )
+            `;
+          })
           .join("");
       } else {
         activeContainer.innerHTML =
@@ -297,10 +350,10 @@ class Dashboard {
                 <div class="workflow-item-detail completed">
                     <div class="workflow-info">
                         <h4>${wf.title}</h4>
-                        <span>Terminé${wf.completed_at ? ` le ${this.formatDate(wf.completed_at)}` : ""}</span>
+                        <span>Termin\u00E9${wf.completed_at ? ` le ${this.formatDate(wf.completed_at)}` : ""}</span>
                     </div>
                     <div class="workflow-meta">
-                        <span class="workflow-phase-badge completed">Terminé</span>
+                        <span class="workflow-phase-badge completed">Termin\u00E9</span>
                     </div>
                 </div>
             `,
@@ -308,13 +361,30 @@ class Dashboard {
           .join("");
       } else {
         completedContainer.innerHTML =
-          '<p class="workflows-list empty">Aucun workflow terminé</p>';
+          '<p class="workflows-list empty">Aucun workflow termin\u00E9</p>';
       }
 
       // Reset to active tab
       this.switchWorkflowTab("active");
     } else {
       workflowsSection.style.display = "none";
+    }
+
+    // Docker Logs section visibility
+    const logsSection = document.getElementById("logs-section");
+    if (this.dockerAvailable) {
+      logsSection.style.display = "block";
+    } else {
+      logsSection.style.display = "none";
+    }
+
+    // Error badge in logs header
+    const errorBadge = document.getElementById("logs-error-badge");
+    if (p.errorCount > 0) {
+      errorBadge.textContent = p.errorCount;
+      errorBadge.style.display = "inline-flex";
+    } else {
+      errorBadge.style.display = "none";
     }
 
     // Environment variables
@@ -329,7 +399,7 @@ class Dashboard {
           (key) => `
                 <div class="env-item">
                     <span class="env-key">${key}</span>
-                    <span class="env-value">••••••••</span>
+                    <span class="env-value">\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022</span>
                 </div>
             `,
         )
@@ -338,6 +408,154 @@ class Dashboard {
       envSection.style.display = "none";
     }
   }
+
+  // --- Docker Logs Methods ---
+
+  async loadContainers(projectId) {
+    const select = document.getElementById("container-select");
+    select.innerHTML = '<option value="">Chargement...</option>';
+
+    try {
+      const res = await fetch(`${API_BASE}/projects/${projectId}/containers`);
+      const containers = await res.json();
+
+      if (containers.length === 0) {
+        select.innerHTML =
+          '<option value="">Aucun container trouv\u00E9</option>';
+        return;
+      }
+
+      select.innerHTML =
+        '<option value="">S\u00E9lectionner un container...</option>' +
+        containers
+          .map(
+            (c) =>
+              `<option value="${c.name}">${c.name} (${c.state})</option>`,
+          )
+          .join("");
+    } catch (e) {
+      select.innerHTML =
+        '<option value="">Erreur de chargement</option>';
+    }
+  }
+
+  startLogStream() {
+    const containerName = document.getElementById("container-select").value;
+    const projectId = this.selectedProject?.id;
+    if (!containerName || !projectId) return;
+
+    this.stopLogStream();
+    this.clearLogs();
+
+    const toggleBtn = document.getElementById("logs-toggle-btn");
+    toggleBtn.classList.add("streaming");
+    toggleBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>`;
+    this.logStreaming = true;
+
+    const url = `${API_BASE}/projects/${projectId}/containers/${containerName}/logs`;
+    this.logEventSource = new EventSource(url);
+
+    this.logEventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "connected") return;
+        if (data.type === "error_detected") {
+          this.onErrorDetected(data);
+          return;
+        }
+        this.appendLogLine(data.line, data.isStderr);
+      } catch (e) {
+        // ignore parse errors
+      }
+    };
+
+    this.logEventSource.onerror = () => {
+      // SSE will auto-reconnect, but update UI
+      console.warn("SSE connection error, will retry...");
+    };
+  }
+
+  stopLogStream() {
+    if (this.logEventSource) {
+      this.logEventSource.close();
+      this.logEventSource = null;
+    }
+
+    const toggleBtn = document.getElementById("logs-toggle-btn");
+    toggleBtn.classList.remove("streaming");
+    toggleBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+    this.logStreaming = false;
+  }
+
+  clearLogs() {
+    const terminal = document.getElementById("logs-terminal");
+    terminal.innerHTML =
+      '<div class="logs-placeholder">En attente de logs...</div>';
+    this.logLineCount = 0;
+  }
+
+  appendLogLine(line, isStderr) {
+    const terminal = document.getElementById("logs-terminal");
+
+    // Remove placeholder if present
+    const placeholder = terminal.querySelector(".logs-placeholder");
+    if (placeholder) placeholder.remove();
+
+    // Detect error lines
+    const isError =
+      /\bError:\b|\bFATAL\b|\b5\d{2}\b|UnhandledPromiseRejection|ECONNREFUSED/i.test(
+        line,
+      );
+
+    const lineEl = document.createElement("div");
+    lineEl.className = `log-line${isStderr ? " stderr" : ""}${isError ? " error" : ""}`;
+
+    // Extract timestamp if present
+    const tsMatch = line.match(/^(\d{4}-\d{2}-\d{2}T[\d:.Z+-]+)\s+(.*)/);
+    if (tsMatch) {
+      const ts = new Date(tsMatch[1]);
+      const timeStr = ts.toLocaleTimeString("fr-FR");
+      lineEl.innerHTML = `<span class="log-timestamp">${timeStr}</span><span class="log-content">${this.escapeHtml(tsMatch[2])}</span>`;
+    } else {
+      lineEl.innerHTML = `<span class="log-content">${this.escapeHtml(line)}</span>`;
+    }
+
+    terminal.appendChild(lineEl);
+    this.logLineCount++;
+
+    // Trim old lines if over max
+    while (this.logLineCount > MAX_LOG_LINES) {
+      const first = terminal.querySelector(".log-line");
+      if (first) {
+        first.remove();
+        this.logLineCount--;
+      } else {
+        break;
+      }
+    }
+
+    // Auto-scroll to bottom
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  onErrorDetected(data) {
+    // Update error badge
+    const badge = document.getElementById("logs-error-badge");
+    const current = parseInt(badge.textContent || "0", 10);
+    badge.textContent = current + 1;
+    badge.style.display = "inline-flex";
+
+    // Refresh projects to update sidebar badges
+    this.loadProjects();
+  }
+
+  escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // --- Health Check Methods ---
 
   async checkAllHealth() {
     let healthyCount = 0;
@@ -356,7 +574,6 @@ class Dashboard {
         }
 
         try {
-          // Use custom healthUrl if provided, otherwise fallback to default
           const healthUrl =
             repo.healthUrl ||
             (repo.type === "landing"
@@ -381,19 +598,15 @@ class Dashboard {
           errorCount++;
         }
 
-        // Update UI for this repo
         this.updateRepoHealthUI(key);
       }
 
-      // Update project indicator in list
       this.updateProjectStatusIndicator(project.id);
     }
 
-    // Update stats
     document.getElementById("stat-healthy").textContent = healthyCount;
     document.getElementById("stat-errors").textContent = errorCount;
 
-    // Re-render detail if a project is selected
     if (this.selectedProject) {
       this.renderProjectDetail();
     }
@@ -450,14 +663,6 @@ class Dashboard {
 
   updateStats() {
     document.getElementById("stat-total").textContent = this.projects.length;
-
-    let activeWorkflows = 0;
-    this.projects.forEach((p) => {
-      if (p.workflows?.active) {
-        activeWorkflows += p.workflows.active.length;
-      }
-    });
-    // Note: We could add a workflows stat if needed
   }
 
   filterProjects(query) {

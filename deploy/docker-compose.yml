@@ -4,7 +4,8 @@ services:
     container_name: projects-dashboard
     restart: unless-stopped
     volumes:
-      - ~/projects-sync:/data/projects:ro
+      - ~/projects-sync:/data/projects
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - traefik-public
     labels:

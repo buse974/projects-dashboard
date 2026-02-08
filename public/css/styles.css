@@ -942,6 +942,198 @@ body {
     color: var(--success);
 }
 
+/* ===================================
+   Docker Logs
+   =================================== */
+.logs-card {
+    grid-column: span 2;
+}
+
+@media (max-width: 1000px) {
+    .logs-card {
+        grid-column: span 1;
+    }
+}
+
+.logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.logs-header h3 {
+    margin-bottom: 0;
+}
+
+.logs-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.container-select {
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-family: inherit;
+    cursor: pointer;
+    min-width: 200px;
+}
+
+.container-select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-primary-glow);
+}
+
+.container-select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.logs-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.logs-btn:hover:not(:disabled) {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.logs-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.logs-btn.streaming {
+    background: var(--error-bg);
+    border-color: var(--error);
+    color: var(--error);
+}
+
+.logs-terminal {
+    background: #000;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    max-height: 500px;
+    min-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.logs-terminal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.logs-terminal::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.logs-terminal::-webkit-scrollbar-thumb {
+    background: var(--border-color-light);
+    border-radius: 3px;
+}
+
+.logs-placeholder {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 3rem 1rem;
+    font-family: inherit;
+}
+
+.log-line {
+    padding: 1px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.log-line .log-timestamp {
+    color: var(--text-muted);
+    margin-right: 0.5rem;
+    opacity: 0.6;
+}
+
+.log-line .log-content {
+    color: #e2e8f0;
+}
+
+.log-line.stderr .log-content {
+    color: #fb923c;
+}
+
+.log-line.error .log-content {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+/* Error Badge */
+.error-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 0.375rem;
+    background: var(--error);
+    border-radius: 100px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: white;
+    margin-left: 0.5rem;
+}
+
+/* Sidebar error badge */
+.project-error-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 0.25rem;
+    background: var(--error);
+    border-radius: 100px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: white;
+    margin-left: auto;
+}
+
+/* Docker unavailable notice */
+.docker-unavailable {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--warning-bg);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--radius-sm);
+    color: var(--warning);
+    font-size: 0.8125rem;
+    margin-bottom: 1rem;
+}
+
 /* Environment Variables */
 .env-list {
     display: flex;
