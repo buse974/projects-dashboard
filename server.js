@@ -122,7 +122,7 @@ app.get("/api/projects/:id/containers/:name/logs", (req, res) => {
   };
 
   logWatcher.on("log", onLog);
-  logWatcher.on("error", onError);
+  logWatcher.on("error_detected", onError);
 
   // If not already watching this container, start streaming
   if (!logWatcher.streams.has(containerName)) {
@@ -139,7 +139,7 @@ app.get("/api/projects/:id/containers/:name/logs", (req, res) => {
 
   req.on("close", () => {
     logWatcher.removeListener("log", onLog);
-    logWatcher.removeListener("error", onError);
+    logWatcher.removeListener("error_detected", onError);
   });
 });
 
