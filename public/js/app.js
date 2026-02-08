@@ -370,12 +370,16 @@ class Dashboard {
       workflowsSection.style.display = "none";
     }
 
-    // Docker Logs section visibility
+    // Docker Logs section - always visible
     const logsSection = document.getElementById("logs-section");
-    if (this.dockerAvailable) {
-      logsSection.style.display = "block";
-    } else {
-      logsSection.style.display = "none";
+    logsSection.style.display = "block";
+
+    // Show notice if Docker not available
+    const terminal = document.getElementById("logs-terminal");
+    if (!this.dockerAvailable && !this.logStreaming) {
+      document.getElementById("container-select").disabled = true;
+      document.getElementById("logs-toggle-btn").disabled = true;
+      terminal.innerHTML = '<div class="logs-placeholder">Docker non disponible sur ce serveur.<br>V\u00E9rifiez que docker.sock est mont\u00E9 dans le container.</div>';
     }
 
     // Error badge in logs header
