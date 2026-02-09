@@ -17,6 +17,15 @@ app.use(express.json());
 const logWatcher = new LogWatcher(PROJECTS_DIR);
 logWatcher.start();
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 app.get("/api/projects", async (req, res) => {
   try {
     const projects = [];
