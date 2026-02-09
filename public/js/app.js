@@ -258,9 +258,12 @@ class Dashboard {
     reposContainer.innerHTML =
       (p.repos || [])
         .map((repo) => {
-          // Mapper le nom du repo à l'ID Umami
-          const umamiKey = repo.name.toLowerCase().replace(/\s+/g, '');
-          const umamiId = p.umami?.[umamiKey] || null;
+          // Utiliser repo.umamiId en priorité, fallback sur mapping de p.umami pour rétrocompatibilité
+          let umamiId = repo.umamiId || null;
+          if (!umamiId && p.umami) {
+            const umamiKey = repo.name.toLowerCase().replace(/\s+/g, '');
+            umamiId = p.umami[umamiKey] || null;
+          }
 
           const repoHealth = this.healthStatus.get(`${p.id}-${repo.name}`);
           return `
