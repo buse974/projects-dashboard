@@ -248,6 +248,10 @@ class Dashboard {
     reposContainer.innerHTML =
       (p.repos || [])
         .map((repo) => {
+          // Mapper le nom du repo à l'ID Umami
+          const umamiKey = repo.name.toLowerCase().replace(/\s+/g, '');
+          const umamiId = p.umami?.[umamiKey] || null;
+
           const repoHealth =
             this.healthStatus.get(`${p.id}-${repo.name}`) || "checking";
           return `
@@ -283,6 +287,20 @@ class Dashboard {
                                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                                     <polyline points="15 3 21 3 21 9"/>
                                     <line x1="10" y1="14" x2="21" y2="3"/>
+                                </svg>
+                            </a>
+                        `
+                            : ""
+                        }
+                        ${
+                          umamiId
+                            ? `
+                            <a href="https://umami.51.77.223.61.nip.io/websites/${umamiId}" target="_blank" class="repo-action-btn" title="Statistiques Umami">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 3v18h18"></path>
+                                    <path d="M18 17V9"></path>
+                                    <path d="M13 17V5"></path>
+                                    <path d="M8 17v-3"></path>
                                 </svg>
                             </a>
                         `
