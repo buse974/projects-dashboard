@@ -48,35 +48,27 @@ app.get("/api/projects", async (req, res) => {
           // Nouveau format (avec repos array)
           if (metadata.repos && Array.isArray(metadata.repos)) {
             projects.push({
+              ...metadata,
               id: dir,
-              name: metadata.name || dir,
-              pitch: metadata.pitch || metadata.description || "",
-              type: metadata.type || "fullstack",
+              workflows: workflows,
+              errorCount: logWatcher.getErrorCount(dir),
+              // Aliases pour compatibilité frontend
               created: metadata.created_at || null,
               updated: metadata.updated_at || metadata.created_at || null,
-              version: metadata.version || "1.0.0",
-              stack: metadata.stack || [],
-              repos: metadata.repos,
-              workflows: workflows,
-              env: metadata.env || [],
-              errorCount: logWatcher.getErrorCount(dir),
             });
           }
           // Ancien format (avec domains object) - conversion automatique
           else {
             projects.push({
+              ...metadata,
               id: dir,
-              name: metadata.name || dir,
-              pitch: metadata.description || "",
-              type: "fullstack",
-              created: metadata.created_at || null,
-              updated: metadata.created_at || null,
-              version: "1.0.0",
-              stack: [],
               repos: buildReposFromDomains(metadata, dir),
               workflows: workflows,
-              env: [],
               errorCount: logWatcher.getErrorCount(dir),
+              // Aliases pour compatibilité frontend
+              created: metadata.created_at || null,
+              updated: metadata.created_at || null,
+              pitch: metadata.description || metadata.pitch || "",
             });
           }
         } catch (e) {
