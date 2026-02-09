@@ -252,8 +252,7 @@ class Dashboard {
           const umamiKey = repo.name.toLowerCase().replace(/\s+/g, '');
           const umamiId = p.umami?.[umamiKey] || null;
 
-          const repoHealth =
-            this.healthStatus.get(`${p.id}-${repo.name}`) || "checking";
+          const repoHealth = this.healthStatus.get(`${p.id}-${repo.name}`);
           return `
                 <div class="repo-item-detail">
                     <div class="repo-info">
@@ -306,10 +305,16 @@ class Dashboard {
                         `
                             : ""
                         }
+                        ${
+                          repoHealth !== null
+                            ? `
                         <div class="repo-status-badge ${repoHealth}" data-repo-health="${p.id}-${repo.name}">
                             <span class="dot"></span>
                             <span>${repoHealth === "online" ? "Online" : repoHealth === "offline" ? "Offline" : "Checking"}</span>
                         </div>
+                        `
+                            : ""
+                        }
                     </div>
                 </div>
             `;
@@ -589,20 +594,15 @@ class Dashboard {
       for (const repo of project.repos) {
         const key = `${project.id}-${repo.name}`;
 
-        if (!repo.url) {
-          this.healthStatus.set(key, "offline");
-          errorCount++;
+        // Skip repos without healthUrl - they are not monitored
+        if (!repo.healthUrl) {
+          this.healthStatus.set(key, null);
+          this.updateRepoHealthUI(key);
           continue;
         }
 
         try {
-          const healthUrl =
-            repo.healthUrl ||
-            (repo.type === "landing"
-              ? `${repo.url}/health.json`
-              : `${repo.url}/health`);
-
-          const response = await fetch(healthUrl, {
+          const response = await fetch(repo.healthUrl, {
             mode: "cors",
             cache: "no-store",
             signal: AbortSignal.timeout(5000),
@@ -636,16 +636,19 @@ class Dashboard {
 
   updateRepoHealthUI(key) {
     const badge = document.querySelector(`[data-repo-health="${key}"]`);
-    if (badge) {
-      const status = this.healthStatus.get(key) || "checking";
-      badge.className = `repo-status-badge ${status}`;
-      badge.querySelector("span:last-child").textContent =
-        status === "online"
-          ? "Online"
-          : status === "offline"
-            ? "Offline"
-            : "Checking";
-    }
+    if (!badge) return; // Badge doesn't exist (repo has no healthUrl)
+
+    const status = this.healthStatus.get(key);
+    if (status === null) return; // No health monitoring for this repo
+
+    const displayStatus = status || "checking";
+    badge.className = `repo-status-badge ${displayStatus}`;
+    badge.querySelector("span:last-child").textContent =
+      displayStatus === "online"
+        ? "Online"
+        : displayStatus === "offline"
+          ? "Offline"
+          : "Checking";
   }
 
   updateProjectStatusIndicator(projectId) {
@@ -660,14 +663,21 @@ class Dashboard {
 
   getProjectOverallHealth(projectId) {
     const project = this.projects.find((p) => p.id === projectId);
-    if (!project?.repos?.length) return "offline";
+    if (!project?.repos?.length) return "checking";
 
     let hasOnline = false;
     let hasOffline = false;
     let allChecking = true;
+    let hasMonitoredRepos = false;
 
     for (const repo of project.repos) {
       const status = this.healthStatus.get(`${projectId}-${repo.name}`);
+
+      // Skip repos without health monitoring (status === null)
+      if (status === null) continue;
+
+      hasMonitoredRepos = true;
+
       if (status === "online") {
         hasOnline = true;
         allChecking = false;
@@ -676,6 +686,9 @@ class Dashboard {
         allChecking = false;
       }
     }
+
+    // If no repos are monitored, show checking state
+    if (!hasMonitoredRepos) return "checking";
 
     if (allChecking) return "checking";
     if (hasOnline && !hasOffline) return "online";
