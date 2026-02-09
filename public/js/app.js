@@ -91,6 +91,16 @@ class Dashboard {
     document.getElementById("logs-clear-btn").addEventListener("click", () => {
       this.clearLogs();
     });
+
+    // JSON viewer controls
+    document.getElementById("json-header").addEventListener("click", () => {
+      this.toggleJsonViewer();
+    });
+
+    document.getElementById("json-copy-btn").addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent header click
+      this.copyJsonToClipboard();
+    });
   }
 
   async checkDockerStatus() {
@@ -737,6 +747,97 @@ class Dashboard {
   capitalize(str) {
     if (!str) return "";
     return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  // --- JSON Viewer Methods ---
+
+  toggleJsonViewer() {
+    const section = document.getElementById("json-section");
+    const isExpanded = section.classList.contains("expanded");
+
+    if (!isExpanded) {
+      // Expanding - populate JSON if not already done
+      this.populateJsonViewer();
+      section.classList.add("expanded");
+    } else {
+      // Collapsing
+      section.classList.remove("expanded");
+    }
+  }
+
+  populateJsonViewer() {
+    if (!this.selectedProject) return;
+
+    const code = document.getElementById("json-code");
+    const jsonString = JSON.stringify(this.selectedProject, null, 2);
+
+    // Apply syntax highlighting
+    const highlighted = this.highlightJson(jsonString);
+    code.innerHTML = highlighted;
+  }
+
+  highlightJson(jsonString) {
+    // Simple regex-based syntax highlighting
+    return jsonString
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+      .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+      .replace(/: (-?\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
+      .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>')
+      .replace(/: null/g, ': <span class="json-null">null</span>')
+      .replace(/([{}[\],])/g, '<span class="json-punctuation">$1</span>');
+  }
+
+  async copyJsonToClipboard() {
+    if (!this.selectedProject) return;
+
+    const btn = document.getElementById("json-copy-btn");
+    const jsonString = JSON.stringify(this.selectedProject, null, 2);
+
+    try {
+      await navigator.clipboard.writeText(jsonString);
+
+      // Visual feedback
+      const originalHTML = btn.innerHTML;
+      btn.classList.add("copied");
+      btn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+        <span>Copied!</span>
+      `;
+
+      setTimeout(() => {
+        btn.classList.remove("copied");
+        btn.innerHTML = originalHTML;
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+      // Fallback for older browsers
+      this.fallbackCopyToClipboard(jsonString);
+    }
+  }
+
+  fallbackCopyToClipboard(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      document.execCommand("copy");
+      const btn = document.getElementById("json-copy-btn");
+      btn.classList.add("copied");
+      setTimeout(() => btn.classList.remove("copied"), 2000);
+    } catch (err) {
+      console.error("Fallback copy failed:", err);
+    }
+
+    document.body.removeChild(textarea);
   }
 }
 
