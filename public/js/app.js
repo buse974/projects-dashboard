@@ -96,6 +96,10 @@ class Dashboard {
       this.clearLogs();
     });
 
+    document.getElementById("logs-hide-btn").addEventListener("click", () => {
+      this.toggleLogsPanel();
+    });
+
     // JSON viewer controls (disabled - now using Raw Data toggle button)
     // document.getElementById("json-header").addEventListener("click", () => {
     //   this.toggleJsonViewer();
@@ -564,6 +568,21 @@ class Dashboard {
     terminal.innerHTML =
       '<div class="logs-placeholder">En attente de logs...</div>';
     this.logLineCount = 0;
+  }
+
+  toggleLogsPanel() {
+    const currentHeight = parseInt(
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--logs-height")
+        .replace("px", ""),
+    );
+
+    // If hidden (50px or less), restore to 300px, otherwise hide to 50px
+    if (currentHeight <= 50) {
+      document.documentElement.style.setProperty("--logs-height", "300px");
+    } else {
+      document.documentElement.style.setProperty("--logs-height", "50px");
+    }
   }
 
   appendLogLine(line, isStderr) {

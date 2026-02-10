@@ -1036,7 +1036,7 @@ body {
     font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
     font-size: 0.75rem;
     line-height: 1.5;
-    height: calc(var(--logs-height) - 70px);
+    height: calc(var(--logs-height) - 130px);
     overflow-y: auto;
     overflow-x: hidden;
     word-wrap: break-word;
