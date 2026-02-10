@@ -137,6 +137,12 @@
                                 <span class="status-text">Online</span>
                             </span>
                         </div>
+                        <button class="raw-data-toggle-btn" id="raw-data-toggle-btn" title="Toggle Raw Data View">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="16 18 22 12 16 6" />
+                                <polyline points="8 6 2 12 8 18" />
+                            </svg>
+                        </button>
                     </header>
 
                     <div class="detail-body">
@@ -307,6 +313,9 @@
                             id="logs-section"
                             style="display: none"
                         >
+                            <div class="logs-resize-handle" id="logs-resize-handle">
+                                <div class="handle-indicator">═══</div>
+                            </div>
                             <div class="logs-header">
                                 <h3>
                                     <svg

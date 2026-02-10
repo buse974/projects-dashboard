@@ -1463,3 +1463,144 @@ body {
     text-align: right;
     user-select: none;
 }
+
+/* ===================================
+   Raw Data Toggle Button
+   =================================== */
+.raw-data-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: var(--radius-sm);
+    color: var(--accent-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.raw-data-toggle-btn:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.raw-data-toggle-btn:active {
+    transform: translateY(0);
+}
+
+.raw-data-toggle-btn svg {
+    transition: transform var(--transition-normal);
+}
+
+/* When in Raw Data mode */
+.project-detail.raw-data-mode .raw-data-toggle-btn {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white;
+}
+
+.project-detail.raw-data-mode .raw-data-toggle-btn svg {
+    transform: rotate(180deg);
+}
+
+/* ===================================
+   Raw Data Mode Styles
+   =================================== */
+.project-detail.raw-data-mode .detail-body > section:not(.json-card) {
+    display: none !important;
+}
+
+.project-detail.raw-data-mode .json-card {
+    grid-column: 1 / -1;
+    height: calc(100vh - 200px);
+    max-height: none;
+}
+
+.project-detail.raw-data-mode .json-card.expanded .json-content {
+    max-height: calc(100vh - 280px);
+}
+
+.project-detail.raw-data-mode .json-viewer {
+    max-height: calc(100vh - 330px);
+    height: 100%;
+}
+
+/* ===================================
+   Docker Logs - Fixed Position & Resize
+   =================================== */
+:root {
+    --logs-height: 300px;
+}
+
+.logs-card {
+    position: fixed;
+    bottom: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    height: var(--logs-height);
+    grid-column: initial !important;
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    z-index: 100;
+    transition: height var(--transition-normal);
+}
+
+/* Adjust detail-body padding to prevent content being hidden */
+.detail-body {
+    padding-bottom: var(--logs-height);
+}
+
+/* Logs Resize Handle */
+.logs-resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    cursor: row-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to bottom, rgba(99, 102, 241, 0.1), transparent);
+    transition: background var(--transition-fast);
+    user-select: none;
+}
+
+.logs-resize-handle:hover {
+    background: linear-gradient(to bottom, rgba(99, 102, 241, 0.2), transparent);
+}
+
+.logs-resize-handle.dragging {
+    background: linear-gradient(to bottom, rgba(99, 102, 241, 0.3), transparent);
+}
+
+.handle-indicator {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    opacity: 0.5;
+    transition: opacity var(--transition-fast);
+}
+
+.logs-resize-handle:hover .handle-indicator,
+.logs-resize-handle.dragging .handle-indicator {
+    opacity: 1;
+    color: var(--accent-primary);
+}
+
+/* Adjust logs content to account for resize handle */
+.logs-card .logs-header {
+    margin-top: 8px;
+}
+
+/* In Raw Data mode, hide logs panel */
+.project-detail.raw-data-mode ~ .logs-card {
+    display: none;
+}

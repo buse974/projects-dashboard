@@ -40,6 +40,10 @@ class Dashboard {
     this.logEventSource = null;
     this.logStreaming = false;
     this.logLineCount = 0;
+    this.rawDataMode = false;
+    this.isDraggingLogs = false;
+    this.dragStartY = 0;
+    this.dragStartHeight = 0;
     this.init();
   }
 
@@ -100,6 +104,31 @@ class Dashboard {
     document.getElementById("json-copy-btn").addEventListener("click", (e) => {
       e.stopPropagation(); // Prevent header click
       this.copyJsonToClipboard();
+    });
+
+    // Raw Data toggle button
+    document
+      .getElementById("raw-data-toggle-btn")
+      .addEventListener("click", () => {
+        this.toggleRawDataMode();
+      });
+
+    // Logs resize handle
+    const resizeHandle = document.getElementById("logs-resize-handle");
+    resizeHandle.addEventListener("mousedown", (e) => {
+      this.startLogsResize(e);
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (this.isDraggingLogs) {
+        this.resizeLogs(e);
+      }
+    });
+
+    document.addEventListener("mouseup", () => {
+      if (this.isDraggingLogs) {
+        this.stopLogsResize();
+      }
     });
   }
 
@@ -210,6 +239,9 @@ class Dashboard {
 
     this.renderProjectDetail();
     this.loadContainers(projectId);
+
+    // Always populate JSON when switching projects (fixes bug where JSON doesn't update)
+    this.populateJsonViewer();
   }
 
   renderProjectDetail() {
@@ -841,6 +873,63 @@ class Dashboard {
     }
 
     document.body.removeChild(textarea);
+  }
+
+  // --- Raw Data Mode ---
+
+  toggleRawDataMode() {
+    this.rawDataMode = !this.rawDataMode;
+    const projectDetail = document.getElementById("project-detail");
+
+    if (this.rawDataMode) {
+      // Entering Raw Data mode
+      projectDetail.classList.add("raw-data-mode");
+      // Expand JSON viewer if not already expanded
+      const jsonSection = document.getElementById("json-section");
+      if (!jsonSection.classList.contains("expanded")) {
+        jsonSection.classList.add("expanded");
+      }
+      this.populateJsonViewer();
+    } else {
+      // Exiting Raw Data mode
+      projectDetail.classList.remove("raw-data-mode");
+    }
+  }
+
+  // --- Logs Resize Methods ---
+
+  startLogsResize(e) {
+    this.isDraggingLogs = true;
+    this.dragStartY = e.clientY;
+    const logsPanel = document.getElementById("logs-section");
+    this.dragStartHeight = parseInt(
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--logs-height")
+        .replace("px", ""),
+    );
+
+    // Add dragging class for visual feedback
+    document.getElementById("logs-resize-handle").classList.add("dragging");
+    document.body.style.cursor = "row-resize";
+    document.body.style.userSelect = "none";
+
+    e.preventDefault();
+  }
+
+  resizeLogs(e) {
+    if (!this.isDraggingLogs) return;
+
+    const deltaY = this.dragStartY - e.clientY;
+    const newHeight = Math.max(200, Math.min(800, this.dragStartHeight + deltaY));
+
+    document.documentElement.style.setProperty("--logs-height", `${newHeight}px`);
+  }
+
+  stopLogsResize() {
+    this.isDraggingLogs = false;
+    document.getElementById("logs-resize-handle").classList.remove("dragging");
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
   }
 }
 
