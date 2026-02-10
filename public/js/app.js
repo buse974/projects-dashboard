@@ -100,6 +100,14 @@ class Dashboard {
       this.toggleLogsPanel();
     });
 
+    // Click on minimized logs bar to restore
+    document.getElementById("logs-section").addEventListener("click", (e) => {
+      const logsCard = e.currentTarget;
+      if (logsCard.classList.contains("minimized")) {
+        this.toggleLogsPanel();
+      }
+    });
+
     // JSON viewer controls (disabled - now using Raw Data toggle button)
     // document.getElementById("json-header").addEventListener("click", () => {
     //   this.toggleJsonViewer();
@@ -571,17 +579,15 @@ class Dashboard {
   }
 
   toggleLogsPanel() {
-    const currentHeight = parseInt(
-      getComputedStyle(document.documentElement)
-        .getPropertyValue("--logs-height")
-        .replace("px", ""),
-    );
+    const logsCard = document.getElementById("logs-section");
 
-    // If hidden (50px or less), restore to 300px, otherwise hide to 50px
-    if (currentHeight <= 50) {
+    if (logsCard.classList.contains("minimized")) {
+      // Restore from minimized
+      logsCard.classList.remove("minimized");
       document.documentElement.style.setProperty("--logs-height", "300px");
     } else {
-      document.documentElement.style.setProperty("--logs-height", "50px");
+      // Minimize to bar
+      logsCard.classList.add("minimized");
     }
   }
 

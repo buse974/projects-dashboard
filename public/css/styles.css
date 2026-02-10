@@ -1600,6 +1600,49 @@ body {
     margin-top: 8px;
 }
 
+/* Minimized state - mini bar at bottom */
+.logs-card.minimized {
+    height: 40px !important;
+    cursor: pointer;
+}
+
+.logs-card.minimized .logs-resize-handle,
+.logs-card.minimized .logs-header,
+.logs-card.minimized .logs-terminal {
+    display: none;
+}
+
+.logs-card.minimized::before {
+    content: 'Docker Logs';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    gap: 0.5rem;
+}
+
+.logs-card.minimized::after {
+    content: '▲';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    color: var(--accent-primary);
+    opacity: 0.7;
+}
+
+.logs-card.minimized:hover {
+    background: var(--bg-hover);
+}
+
+.logs-card.minimized:hover::after {
+    opacity: 1;
+}
+
 /* In Raw Data mode, hide logs panel */
 .project-detail.raw-data-mode ~ .logs-card {
     display: none;
