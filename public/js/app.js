@@ -96,10 +96,10 @@ class Dashboard {
       this.clearLogs();
     });
 
-    // JSON viewer controls
-    document.getElementById("json-header").addEventListener("click", () => {
-      this.toggleJsonViewer();
-    });
+    // JSON viewer controls (disabled - now using Raw Data toggle button)
+    // document.getElementById("json-header").addEventListener("click", () => {
+    //   this.toggleJsonViewer();
+    // });
 
     document.getElementById("json-copy-btn").addEventListener("click", (e) => {
       e.stopPropagation(); // Prevent header click
@@ -920,7 +920,7 @@ class Dashboard {
     if (!this.isDraggingLogs) return;
 
     const deltaY = this.dragStartY - e.clientY;
-    const newHeight = Math.max(200, Math.min(800, this.dragStartHeight + deltaY));
+    const newHeight = Math.max(40, Math.min(800, this.dragStartHeight + deltaY));
 
     document.documentElement.style.setProperty("--logs-height", `${newHeight}px`);
   }

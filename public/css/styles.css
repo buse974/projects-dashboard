@@ -1036,8 +1036,7 @@ body {
     font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
     font-size: 0.75rem;
     line-height: 1.5;
-    max-height: 500px;
-    min-height: 200px;
+    height: calc(var(--logs-height) - 70px);
     overflow-y: auto;
     overflow-x: hidden;
     word-wrap: break-word;
@@ -1245,7 +1244,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 1.25rem;
-    cursor: pointer;
+    cursor: default;
     user-select: none;
     transition: all var(--transition-fast);
     position: relative;
@@ -1515,6 +1514,7 @@ body {
 }
 
 .project-detail.raw-data-mode .json-card {
+    display: block !important;
     grid-column: 1 / -1;
     height: calc(100vh - 200px);
     max-height: none;
