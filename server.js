@@ -45,11 +45,19 @@ app.get("/api/projects", async (req, res) => {
           const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
           const workflows = loadWorkflows(PROJECTS_DIR, dir);
 
+          // Mail DNS config
+          const mailPath = path.join(projectPath, "mail.json");
+          let mail = null;
+          if (fs.existsSync(mailPath)) {
+            try { mail = JSON.parse(fs.readFileSync(mailPath, "utf8")); } catch (e) {}
+          }
+
           // Nouveau format (avec repos array)
           if (metadata.repos && Array.isArray(metadata.repos)) {
             projects.push({
               ...metadata,
               id: dir,
+              mail,
               workflows: workflows,
               errorCount: logWatcher.getErrorCount(dir),
               // Aliases pour compatibilité frontend
@@ -62,6 +70,7 @@ app.get("/api/projects", async (req, res) => {
             projects.push({
               ...metadata,
               id: dir,
+              mail,
               repos: buildReposFromDomains(metadata, dir),
               workflows: workflows,
               errorCount: logWatcher.getErrorCount(dir),

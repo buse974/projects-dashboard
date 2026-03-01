@@ -1159,6 +1159,101 @@ body {
     color: var(--text-muted);
 }
 
+/* Mail DNS Section */
+.mail-domain-badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--accent-primary);
+    background: var(--accent-primary-glow);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
+    margin-left: 0.5rem;
+}
+
+.dns-records {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dns-record {
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--accent-primary);
+}
+
+.dns-record-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.dns-record-type {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+}
+
+.dns-type-a {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+}
+
+.dns-type-spf {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--accent-primary);
+}
+
+.dns-type-dkim {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--accent-secondary);
+}
+
+.dns-type-dmarc {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+}
+
+.dns-record-name {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.dns-record-rtype {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+.dns-copy-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.2rem;
+    border-radius: 3px;
+    transition: all 0.15s;
+}
+
+.dns-copy-btn:hover {
+    color: var(--accent-primary);
+    background: var(--bg-hover);
+}
+
+.dns-record-value {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    word-break: break-all;
+    line-height: 1.4;
+}
+
 /* Loading State */
 .loading-skeleton {
     background: linear-gradient(

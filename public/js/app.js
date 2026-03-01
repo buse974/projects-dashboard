@@ -491,6 +491,52 @@ class Dashboard {
     } else {
       envSection.style.display = "none";
     }
+
+    // Mail DNS section
+    const mailSection = document.getElementById("mail-section");
+    const mailContainer = document.getElementById("detail-mail");
+    const mailBadge = document.getElementById("mail-domain-badge");
+
+    if (p.mail && p.mail.dns) {
+      mailSection.style.display = "block";
+      mailBadge.textContent = p.mail.domain;
+
+      const records = [
+        { key: "a", label: "A", icon: "A" },
+        { key: "spf", label: "SPF", icon: "S" },
+        { key: "dkim", label: "DKIM", icon: "D" },
+        { key: "dmarc", label: "DMARC", icon: "M" },
+      ];
+
+      mailContainer.innerHTML = records
+        .filter((r) => p.mail.dns[r.key])
+        .map((r) => {
+          const rec = p.mail.dns[r.key];
+          const value = rec.value || "";
+          const truncated = r.key === "dkim" && value.length > 80
+            ? value.substring(0, 80) + "..."
+            : value;
+          return `
+            <div class="dns-record" data-full-value="${this.escapeHtml(value)}">
+              <div class="dns-record-header">
+                <span class="dns-record-type dns-type-${r.key}">${r.label}</span>
+                <span class="dns-record-name">${rec.name}</span>
+                <span class="dns-record-rtype">${rec.type}</span>
+                <button class="dns-copy-btn" title="Copier la valeur" onclick="navigator.clipboard.writeText(this.closest('.dns-record').dataset.fullValue)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="dns-record-value">${this.escapeHtml(truncated)}</div>
+            </div>
+          `;
+        })
+        .join("");
+    } else {
+      mailSection.style.display = "none";
+    }
   }
 
   // --- Docker Logs Methods ---
